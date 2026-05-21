@@ -11,7 +11,6 @@ import { ShiftService } from '../../core/services/shift.service';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="animate-fade-in-up space-y-8">
-      <!-- Header -->
       <div class="flex items-end justify-between">
         <div>
           <p class="text-sm text-emerald-600 font-semibold mb-1">{{ formatDate(today) }}</p>
@@ -38,7 +37,6 @@ import { ShiftService } from '../../core/services/shift.service';
         </div>
       </div>
 
-      <!-- Stats Grid -->
       <div class="grid grid-cols-4 gap-5">
         <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">Total</span>

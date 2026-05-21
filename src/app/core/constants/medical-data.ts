@@ -134,7 +134,6 @@ export const MEDICINES: MedicineCatalogEntry[] = [
   }
 ];
 
-// Legacy export — kept for any external readers; not used by the new flow.
 export const MEDICATIONS: Medication[] = MEDICINES.map(m => ({
   name: m.name,
   dosage: m.doses[0]

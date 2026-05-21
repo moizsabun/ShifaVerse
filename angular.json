@@ -23,6 +23,7 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
+            "baseHref": "/ShifaVerse/",
             "assets": [
               {
                 "glob": "**/*",
@@ -68,6 +69,6 @@
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": "b2367617-3f59-43c1-8ab3-f5a89302e213"
   }
 }

@@ -2,6 +2,7 @@ import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AppointmentService } from '../../core/services/appointment.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-doctor-layout',
@@ -20,7 +21,7 @@ import { AppointmentService } from '../../core/services/appointment.service';
               </svg>
             </div>
             <div>
-              <h2 class="font-display text-xl font-bold text-white">MediCare+</h2>
+              <h2 class="font-display text-xl font-bold text-white">{{ auth.currentClinic()?.name ?? 'MediCare+' }}</h2>
               <p class="text-xs text-emerald-400 font-medium">Doctor Portal</p>
             </div>
           </div>
@@ -31,7 +32,7 @@ import { AppointmentService } from '../../core/services/appointment.service';
           <div class="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-2xl p-4 border border-emerald-500/30">
             <div class="flex items-center gap-2 mb-2">
               <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse-ring"></div>
-              <span class="text-xs font-semibold text-emerald-300">Dr. Sarah Mitchell</span>
+              <span class="text-xs font-semibold text-emerald-300">{{ auth.currentUser()?.name }}</span>
             </div>
             <p class="text-xs text-slate-300">General Physician</p>
             <p class="text-xs text-slate-500 mt-1 font-mono">MED-2024-8847</p>
@@ -83,6 +84,11 @@ import { AppointmentService } from '../../core/services/appointment.service';
 
       <!-- Main Content -->
       <main class="flex-1 overflow-y-auto scrollbar-thin bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/30">
+        @if (auth.isClinicSuspended()) {
+          <div class="bg-rose-500 text-white px-8 py-3 text-sm font-semibold text-center">
+            ⚠ This clinic is suspended due to unpaid bills. Please ask the owner to clear payment.
+          </div>
+        }
         <div class="p-8 max-w-7xl mx-auto">
           <router-outlet />
         </div>
@@ -128,12 +134,14 @@ import { AppointmentService } from '../../core/services/appointment.service';
 export class DoctorLayoutComponent {
   private appointmentService = inject(AppointmentService);
   private router = inject(Router);
+  auth = inject(AuthService);
 
-  queueCount = computed(() => 
+  queueCount = computed(() =>
     this.appointmentService.todayAppointments().filter(a => a.status === 'pending').length
   );
 
   logout(): void {
+    this.auth.logout();
     this.router.navigate(['/login']);
   }
 }

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ShiftService } from '../../core/services/shift.service';
 import { AppointmentService } from '../../core/services/appointment.service';
+import { InvoiceService } from '../../core/services/invoice.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-shift-management',
@@ -45,14 +47,9 @@ import { NotificationService } from '../../core/services/notification.service';
             </div>
           </div>
           <div class="p-6 flex items-center justify-between">
-            <p class="text-sm text-slate-600">
-              When closed, no further appointments can be booked for this shift.
-            </p>
+            <p class="text-sm text-slate-600">When closed, no further appointments can be booked for this shift.</p>
             <button (click)="confirmClose()"
-                    class="px-5 py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-xl font-semibold shadow-lg shadow-rose-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-              </svg>
+                    class="px-5 py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-xl font-semibold shadow-lg shadow-rose-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all">
               Close Shift
             </button>
           </div>
@@ -76,16 +73,12 @@ import { NotificationService } from '../../core/services/notification.service';
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-sm font-semibold text-slate-700 mb-2">Shift Name</label>
-              <input type="text"
-                     [(ngModel)]="newName"
-                     placeholder="e.g. Morning Shift"
+              <input type="text" [(ngModel)]="newName" placeholder="e.g. Morning Shift"
                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-slate-700 mb-2">Time Label</label>
-              <input type="text"
-                     [(ngModel)]="newLabel"
-                     placeholder="e.g. 9:00 AM - 2:00 PM"
+              <input type="text" [(ngModel)]="newLabel" placeholder="e.g. 9:00 AM - 2:00 PM"
                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all" />
             </div>
           </div>
@@ -100,18 +93,14 @@ import { NotificationService } from '../../core/services/notification.service';
           @if (error()) {
             <p class="text-xs text-rose-500 mb-3">{{ error() }}</p>
           }
-          <button (click)="open()"
-                  [disabled]="!canOpen()"
-                  class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-            </svg>
+          <button (click)="open()" [disabled]="!canOpen()"
+                  class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
             Open Shift
           </button>
         </div>
       }
 
-      <!-- Closed Shift History -->
+      <!-- Past Shifts -->
       <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100">
           <h3 class="font-display text-lg font-semibold text-slate-900">Past Shifts</h3>
@@ -145,23 +134,27 @@ import { NotificationService } from '../../core/services/notification.service';
         }
       </div>
 
-      <!-- Close confirmation modal -->
+      <!-- Close confirmation -->
       @if (showConfirmClose()) {
         <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
             <h3 class="font-display text-xl font-semibold text-slate-900 mb-2">Close this shift?</h3>
-            <p class="text-sm text-slate-600 mb-5">
-              {{ pendingInActive() }} pending appointment{{ pendingInActive() !== 1 ? 's' : '' }} will remain visible but no new appointments can be booked.
+            <p class="text-sm text-slate-600 mb-3">
+              {{ pendingInActive() }} pending appointment{{ pendingInActive() !== 1 ? 's' : '' }} · no further booking allowed.
             </p>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 text-xs">
+              <p class="font-semibold text-amber-900">Bill will be posted to billing department:</p>
+              <p class="text-amber-700 mt-1">
+                <span class="font-bold text-amber-900">{{ billableInActive() }}</span> entertained patient{{ billableInActive() !== 1 ? 's' : '' }}
+                × <span class="font-mono">{{ feeLabel() }}</span>
+                = <span class="font-bold text-amber-900">{{ billPreview() }}</span>
+              </p>
+            </div>
             <div class="flex gap-3 justify-end">
               <button (click)="showConfirmClose.set(false)"
-                      class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
-                Cancel
-              </button>
+                      class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">Cancel</button>
               <button (click)="closeActive()"
-                      class="px-4 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-xl font-semibold shadow-lg shadow-rose-500/30 hover:shadow-xl transition-all">
-                Yes, close shift
-              </button>
+                      class="px-4 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-xl font-semibold shadow-lg shadow-rose-500/30 hover:shadow-xl transition-all">Yes, close shift</button>
             </div>
           </div>
         </div>
@@ -172,7 +165,9 @@ import { NotificationService } from '../../core/services/notification.service';
 export class ShiftManagementComponent {
   private shiftService = inject(ShiftService);
   private appointmentService = inject(AppointmentService);
+  private invoiceService = inject(InvoiceService);
   private notificationService = inject(NotificationService);
+  private auth = inject(AuthService);
 
   presets = [
     { name: 'Morning Shift', label: '9:00 AM - 2:00 PM' },
@@ -197,6 +192,22 @@ export class ShiftManagementComponent {
     const a = this.active();
     return a ? this.appointmentService.byShift(a.id).filter(x => x.status === 'pending').length : 0;
   });
+
+  billableInActive = computed(() => {
+    const a = this.active();
+    return a ? this.appointmentService.byShift(a.id).filter(x => x.status !== 'cancelled').length : 0;
+  });
+
+  feeLabel(): string {
+    const c = this.auth.currentClinic();
+    return c ? `${c.currency} ${c.perAppointmentFee}` : '';
+  }
+
+  billPreview(): string {
+    const c = this.auth.currentClinic();
+    if (!c) return '—';
+    return `${c.currency} ${this.billableInActive() * c.perAppointmentFee}`;
+  }
 
   canOpen(): boolean {
     return this.newName.trim().length > 0 && this.newLabel.trim().length > 0;
@@ -228,7 +239,15 @@ export class ShiftManagementComponent {
     if (!a) return;
     try {
       this.shiftService.closeShift(a.id);
-      this.notificationService.success(`${a.name} closed`);
+      const closed = this.shiftService.getById(a.id);
+      const inv = closed ? this.invoiceService.onShiftClosed(closed) : null;
+      let suffix = '';
+      if (inv) {
+        suffix = inv.status === 'open'
+          ? ` · ${inv.period} bill running total: ${inv.currency} ${inv.total}`
+          : ` · Invoice posted: ${inv.currency} ${inv.total}`;
+      }
+      this.notificationService.success(`${a.name} closed${suffix}`);
     } catch (e: any) {
       this.notificationService.error(e.message);
     } finally {
@@ -238,13 +257,6 @@ export class ShiftManagementComponent {
 
   countForShift(id: number): number {
     return this.appointmentService.byShift(id).filter(a => a.status !== 'cancelled').length;
-  }
-
-  formatDateTime(iso: string): string {
-    const d = new Date(iso);
-    return d.toLocaleString('en-US', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
-    });
   }
 
   formatDateOnly(iso: string): string {

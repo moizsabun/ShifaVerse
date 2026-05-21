@@ -100,13 +100,6 @@ export class ShiftHistoryComponent {
       }));
   });
 
-  formatDateTime(iso: string): string {
-    const d = new Date(iso);
-    return d.toLocaleString('en-US', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
-    });
-  }
-
   formatDateOnly(iso: string): string {
     return new Date(iso).toLocaleDateString('en-US', {
       weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'

@@ -4,6 +4,7 @@ export type AppointmentStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface Appointment {
   id: number;
+  clinicId: number;
   userId: number;
   userName: string;
   date: string;
@@ -12,5 +13,6 @@ export interface Appointment {
   sequence: number;
   status: AppointmentStatus;
   createdAt: string;
+  completedAt?: string;
   treatment?: Treatment;
 }

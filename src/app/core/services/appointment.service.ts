@@ -3,28 +3,40 @@ import { Appointment, AppointmentStatus } from '../models/appointment.model';
 import { Shift } from '../models/shift.model';
 import { Treatment } from '../models/treatment.model';
 import { ShiftService } from './shift.service';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
-  private readonly STORAGE_KEY = 'medicare_appointments_v2';
+  private readonly STORAGE_KEY = 'medicare_appointments_v3';
 
   private shiftService = inject(ShiftService);
+  private auth = inject(AuthService);
 
   private appointmentsSignal = signal<Appointment[]>(this.loadFromStorage());
 
-  appointments = this.appointmentsSignal.asReadonly();
+  /** Scoped to current clinic. */
+  appointments = computed(() => {
+    const cid = this.auth.currentClinicId();
+    if (!cid) return [];
+    return this.appointmentsSignal().filter(a => a.clinicId === cid);
+  });
+
+  /** Unscoped — for InvoiceService + public dashboard. */
+  allAppointments(): Appointment[] {
+    return this.appointmentsSignal();
+  }
 
   todayAppointments = computed(() => {
     const today = this.getTodayString();
-    return this.appointmentsSignal().filter(a => a.date === today);
+    return this.appointments().filter(a => a.date === today);
   });
 
   pendingAppointments = computed(() =>
-    this.appointmentsSignal().filter(a => a.status === 'pending')
+    this.appointments().filter(a => a.status === 'pending')
   );
 
   completedAppointments = computed(() =>
-    this.appointmentsSignal().filter(a => a.status === 'completed')
+    this.appointments().filter(a => a.status === 'completed')
   );
 
   activeShiftAppointments = computed(() => {
@@ -46,18 +58,16 @@ export class AppointmentService {
       const data = localStorage.getItem(this.STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data) as Appointment[];
-        if (Array.isArray(parsed) && parsed.every(a => typeof a?.shiftId === 'number')) {
-          return parsed;
-        }
+        if (Array.isArray(parsed) && parsed.every(a => typeof a?.clinicId === 'number')) return parsed;
       }
-    } catch {
-    }
+    } catch {}
     const today = new Date().toISOString().split('T')[0];
     return [
       {
-        id: 1, userId: 1, userName: 'Ahmed Khan', date: today,
+        id: 1, clinicId: 1, userId: 1, userName: 'Ahmed Khan', date: today,
         shiftId: 1, shiftName: 'Morning Shift',
-        sequence: 1, status: 'completed', createdAt: today,
+        sequence: 1, status: 'completed', createdAt: `${today}T09:05:00`,
+        completedAt: `${today}T09:20:00`,
         treatment: {
           diagnosis: ['Common Cold', 'Sinusitis'],
           symptoms: ['Cough', 'Headache', 'Runny Nose'],
@@ -75,10 +85,6 @@ export class AppointmentService {
     return new Date().toISOString().split('T')[0];
   }
 
-  /**
-   * Returns the set of sequence numbers already taken in a shift
-   * (excluding cancelled appointments).
-   */
   private usedSequences(shiftId: number): Set<number> {
     return new Set(
       this.appointmentsSignal()
@@ -91,11 +97,6 @@ export class AppointmentService {
     return !this.usedSequences(shiftId).has(sequence);
   }
 
-  /**
-   * Next auto sequence = smallest positive integer not yet taken in this shift.
-   * Manual (advance-time) tokens reserve a slot, and the auto counter skips
-   * over them and continues onwards once it catches up.
-   */
   getNextSequence(shiftId: number): number {
     const used = this.usedSequences(shiftId);
     let n = 1;
@@ -103,12 +104,6 @@ export class AppointmentService {
     return n;
   }
 
-  /**
-   * Create appointment for the currently active shift.
-   * - shift must be active (endedAt === null)
-   * - manualSequence (optional): compounder-assigned token for an advance-time
-   *   patient calling in. Must be a positive integer not already used in this shift.
-   */
   createAppointment(
     userId: number,
     userName: string,
@@ -118,6 +113,9 @@ export class AppointmentService {
     if (shift.endedAt !== null) {
       throw new Error('This shift has been closed. Cannot book appointment.');
     }
+    const cid = this.auth.currentClinicId();
+    if (!cid) throw new Error('No active clinic context');
+    if (shift.clinicId !== cid) throw new Error('Shift does not belong to current clinic');
 
     let sequence: number;
     if (manualSequence !== undefined && manualSequence !== null) {
@@ -134,6 +132,7 @@ export class AppointmentService {
 
     const newAppointment: Appointment = {
       id: Math.max(0, ...this.appointmentsSignal().map(a => a.id)) + 1,
+      clinicId: cid,
       userId,
       userName,
       date: this.getTodayString(),
@@ -141,7 +140,7 @@ export class AppointmentService {
       shiftName: shift.name,
       sequence,
       status: 'pending',
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString()
     };
 
     this.appointmentsSignal.update(apts => [...apts, newAppointment]);
@@ -164,9 +163,10 @@ export class AppointmentService {
   }
 
   completeAppointment(id: number, treatment: Treatment): void {
+    const completedAt = new Date().toISOString();
     this.appointmentsSignal.update(apts =>
       apts.map(a => a.id === id
-        ? { ...a, status: 'completed' as AppointmentStatus, treatment }
+        ? { ...a, status: 'completed' as AppointmentStatus, treatment, completedAt }
         : a
       )
     );
@@ -183,14 +183,27 @@ export class AppointmentService {
   }
 
   getUserAppointments(userId: number): Appointment[] {
-    return this.appointmentsSignal()
+    return this.appointments()
       .filter(a => a.userId === userId)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
   getUserHistory(userId: number): Appointment[] {
-    return this.appointmentsSignal()
+    return this.appointments()
       .filter(a => a.userId === userId && a.status === 'completed')
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  /**
+   * Average service time (ms) for completed appointments in a given shift.
+   * Used by the public dashboard to estimate waiting time.
+   */
+  averageServiceMsForShift(shiftId: number): number | null {
+    const completed = this.appointmentsSignal()
+      .filter(a => a.shiftId === shiftId && a.status === 'completed' && a.completedAt && a.createdAt)
+      .sort((a, b) => new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime());
+    if (completed.length === 0) return null;
+    const durations = completed.map(a => new Date(a.completedAt!).getTime() - new Date(a.createdAt).getTime());
+    return durations.reduce((s, d) => s + d, 0) / durations.length;
   }
 }

@@ -1,5 +1,6 @@
 export interface Shift {
   id: number;
+  clinicId: number;
   name: string;
   label: string;
   startedAt: string;

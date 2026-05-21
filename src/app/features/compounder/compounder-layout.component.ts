@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
 import { AppointmentService } from '../../core/services/appointment.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-compounder-layout',
@@ -22,7 +23,7 @@ import { AppointmentService } from '../../core/services/appointment.service';
               </svg>
             </div>
             <div>
-              <h2 class="font-display text-xl font-bold text-slate-900">MediCare+</h2>
+              <h2 class="font-display text-xl font-bold text-slate-900">{{ auth.currentClinic()?.name ?? 'MediCare+' }}</h2>
               <p class="text-xs text-slate-500 font-medium">Compounder Portal</p>
             </div>
           </div>
@@ -115,6 +116,11 @@ import { AppointmentService } from '../../core/services/appointment.service';
 
       <!-- Main Content -->
       <main class="flex-1 overflow-y-auto scrollbar-thin">
+        @if (auth.isClinicSuspended()) {
+          <div class="bg-rose-500 text-white px-8 py-3 text-sm font-semibold text-center">
+            ⚠ This clinic is suspended due to unpaid bills. Please ask the owner to clear payment.
+          </div>
+        }
         <div class="p-8 max-w-7xl mx-auto">
           <router-outlet />
         </div>
@@ -161,11 +167,13 @@ export class CompounderLayoutComponent {
   private userService = inject(UserService);
   private appointmentService = inject(AppointmentService);
   private router = inject(Router);
+  auth = inject(AuthService);
 
   userCount = computed(() => this.userService.users().length);
   pendingCount = computed(() => this.appointmentService.pendingAppointments().length);
 
   logout(): void {
+    this.auth.logout();
     this.router.navigate(['/login']);
   }
 }

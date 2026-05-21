@@ -40,11 +40,10 @@ import { NotificationService } from '../../core/services/notification.service';
       }
 
       <div class="grid grid-cols-3 gap-6">
-        <!-- Main Form -->
         <div class="col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
           <h3 class="font-display text-lg font-semibold text-slate-900 mb-6">Appointment Details</h3>
 
-          <!-- Patient Selection -->
+          <!-- Patient -->
           <div class="mb-6">
             <label class="block text-sm font-semibold text-slate-700 mb-2">Select Patient</label>
             @if (!selectedUser()) {
@@ -52,11 +51,9 @@ import { NotificationService } from '../../core/services/notification.service';
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input
-                  type="text"
-                  placeholder="Search patient by name or mobile..."
-                  [(ngModel)]="userSearch"
-                  class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all" />
+                <input type="text" placeholder="Search patient by name or mobile..."
+                       [(ngModel)]="userSearch"
+                       class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all" />
               </div>
               <div class="max-h-56 overflow-y-auto scrollbar-thin border border-slate-100 rounded-xl">
                 @for (u of filteredUsers(); track u.id) {
@@ -96,7 +93,7 @@ import { NotificationService } from '../../core/services/notification.service';
             }
           </div>
 
-          <!-- Active Shift (read-only) -->
+          <!-- Active Shift -->
           <div class="mb-6">
             <label class="block text-sm font-semibold text-slate-700 mb-2">Active Shift</label>
             @if (activeShift(); as s) {
@@ -115,24 +112,19 @@ import { NotificationService } from '../../core/services/notification.service';
             }
           </div>
 
-          <!-- Manual Token (optional) -->
+          <!-- Manual Token -->
           <div class="mb-6">
             <label class="block text-sm font-semibold text-slate-700 mb-2">
               Manual Token #
               <span class="ml-1 text-xs font-normal text-slate-500">(optional — for advance-time bookings)</span>
             </label>
-            <input
-              type="number"
-              min="1"
-              step="1"
-              [placeholder]="autoSequence() ? 'Leave blank to auto-assign #' + autoSequence() : 'No active shift'"
-              [(ngModel)]="manualTokenInput"
-              [disabled]="!activeShift()"
-              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
+            <input type="number" min="1" step="1"
+                   [placeholder]="autoSequence() ? 'Leave blank to auto-assign #' + autoSequence() : 'No active shift'"
+                   [(ngModel)]="manualTokenInput"
+                   [disabled]="!activeShift()"
+                   class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
             @if (manualTokenInput && manualTaken()) {
-              <p class="text-xs text-rose-500 mt-1.5">
-                Token #{{ manualTokenInput }} is already assigned in this shift
-              </p>
+              <p class="text-xs text-rose-500 mt-1.5">Token #{{ manualTokenInput }} is already assigned in this shift</p>
             } @else {
               <p class="text-xs text-slate-500 mt-1.5">
                 Use this when a patient calls in for a later time in the same shift.
@@ -141,21 +133,17 @@ import { NotificationService } from '../../core/services/notification.service';
             }
           </div>
 
-          <!-- Buttons -->
           <div class="flex gap-3 pt-4 border-t border-slate-100">
-            <button (click)="submit()"
-                    [disabled]="!canSubmit()"
+            <button (click)="submit()" [disabled]="!canSubmit()"
                     class="flex-1 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
               Book Appointment
             </button>
             <button (click)="back()"
-                    class="px-6 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
-              Cancel
-            </button>
+                    class="px-6 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">Cancel</button>
           </div>
         </div>
 
-        <!-- Preview Sidebar -->
+        <!-- Preview -->
         <div class="bg-gradient-to-br from-slate-900 to-emerald-900 rounded-3xl p-6 text-white shadow-2xl h-fit sticky top-8">
           <h4 class="text-xs uppercase tracking-wider text-emerald-300 mb-4">Appointment Preview</h4>
           @if (selectedUser() && activeShift()) {
@@ -182,9 +170,6 @@ import { NotificationService } from '../../core/services/notification.service';
             </div>
           } @else {
             <div class="text-center py-12 text-slate-400 text-sm">
-              <svg class="w-12 h-12 text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
               {{ !activeShift() ? 'No active shift' : 'Select a patient to see preview' }}
             </div>
           }
@@ -274,9 +259,7 @@ export class NewAppointmentComponent {
       const manual = this.manualTokenInput && this.manualTokenInput > 0 ? this.manualTokenInput : undefined;
       const apt = this.appointmentService.createAppointment(user.id, user.name, shift, manual);
       const tokenLabel = manual ? `Manual token #${apt.sequence}` : `Token #${apt.sequence}`;
-      this.notificationService.success(
-        `Appointment booked! ${tokenLabel} for ${shift.name}`
-      );
+      this.notificationService.success(`Appointment booked! ${tokenLabel} for ${shift.name}`);
       this.router.navigate(['/compounder/appointments']);
     } catch (err: any) {
       this.notificationService.error(err.message);

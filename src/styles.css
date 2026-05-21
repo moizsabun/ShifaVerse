@@ -38,12 +38,17 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-/* Print styles for thermal printer */
+/* ====================================================================
+   THERMAL PRINTER STYLES — Black Copper BC-85AC (80mm / 72mm printable)
+   ==================================================================== */
 @media print {
+  /* Hide everything by default */
   body * { visibility: hidden; }
-  /* Default: show any .print-area (backwards-compatible) */
   .print-area, .print-area * { visibility: visible; }
-  /* When body has a specific print mode, only the matching panel is visible */
+  .no-print { display: none !important; }
+
+  /* Two-print mode: when body has a print-mode-* class, only the matching
+     copy is visible. The other .print-area gets hidden. */
   body.print-mode-patient .print-area:not(.print-patient),
   body.print-mode-patient .print-area:not(.print-patient) * { visibility: hidden; }
   body.print-mode-internal .print-area:not(.print-internal),
@@ -52,16 +57,93 @@ body {
   body.print-mode-patient .print-patient * { visibility: visible; }
   body.print-mode-internal .print-internal,
   body.print-mode-internal .print-internal * { visibility: visible; }
-  .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    padding: 0 !important;
-    background: white;
+
+  /* Page: 80mm roll, auto height, no margins (printer handles physical margins) */
+  @page {
+    size: 80mm auto;
+    margin: 0;
   }
-  .no-print { display: none !important; }
-  @page { size: 80mm auto; margin: 5mm; }
+
+  html, body {
+    width: 80mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* The receipt itself: 72mm printable area, 4mm side gutter */
+  .print-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
+    margin: 0 4mm !important;
+    padding: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    font-family: 'Courier New', 'Consolas', monospace !important;
+    color: #000 !important;
+    font-size: 10pt;
+    line-height: 1.35;
+  }
+
+  /* Strip every Tailwind decorative class inside the receipt */
+  .print-area * {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    font-family: 'Courier New', 'Consolas', monospace !important;
+  }
+
+  /* Neutralize Tailwind padding utilities inside the receipt */
+  .print-area .p-1, .print-area .p-2, .print-area .p-3, .print-area .p-4,
+  .print-area .p-5, .print-area .p-6, .print-area .p-8, .print-area .p-10,
+  .print-area .px-3, .print-area .px-4, .print-area .px-5, .print-area .px-6,
+  .print-area .py-3, .print-area .py-4, .print-area .py-5, .print-area .py-6,
+  .print-area .pt-3, .print-area .pt-4, .print-area .pt-5, .print-area .pt-6,
+  .print-area .pb-3, .print-area .pb-4, .print-area .pb-5, .print-area .pb-6,
+  .print-area .pl-3, .print-area .pl-4, .print-area .pl-5, .print-area .pl-6 {
+    padding: 0 !important;
+  }
+  .print-area .max-w-md { max-width: none !important; width: 100% !important; }
+  .print-area .mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
+  .print-area .border-b-2 { border-bottom: 1px dashed #000 !important; }
+  .print-area .border-b   { border-bottom: 1px dashed #000 !important; }
+  .print-area .border-t-2 { border-top: 1px dashed #000 !important; }
+  .print-area .border-t   { border-top: 1px dashed #000 !important; }
+  .print-area .border     { border: none !important; }
+  .print-area .shadow-2xl,
+  .print-area .shadow-xl,
+  .print-area .shadow-lg,
+  .print-area .shadow      { box-shadow: none !important; }
+
+  /* Receipt typography hierarchy */
+  .print-area .rcpt-title    { font-size: 14pt; font-weight: 800; text-align: center; letter-spacing: 1px; }
+  .print-area .rcpt-subtitle { font-size: 8pt;  text-align: center; letter-spacing: 2px; text-transform: uppercase; }
+  .print-area .rcpt-meta     { font-size: 8pt;  text-align: center; }
+  .print-area .rcpt-section  { padding: 2mm 0; }
+  .print-area .rcpt-divider  { border-top: 1px dashed #000; margin: 1mm 0; }
+  .print-area .rcpt-double   { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 1mm 0; margin: 1mm 0; }
+  .print-area .rcpt-label    { font-size: 7pt; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .print-area .rcpt-value    { font-size: 10pt; font-weight: 700; }
+  .print-area .rcpt-row      { display: flex; justify-content: space-between; gap: 2mm; font-size: 9pt; }
+  .print-area .rcpt-line     { font-size: 9pt; }
+  .print-area .rcpt-big      { font-size: 13pt; font-weight: 800; text-align: center; }
+  .print-area .rcpt-rx-name  { font-size: 10pt; font-weight: 800; }
+  .print-area .rcpt-rx-dose  { font-size: 8pt; padding-left: 4mm; }
+  .print-area .rcpt-center   { text-align: center; }
+  .print-area .rcpt-small    { font-size: 7pt; }
+  .print-area .rcpt-bullet   { font-size: 9pt; }
+
+  /* Avoid awkward page breaks (irrelevant for receipt but defensive) */
+  .print-area, .rcpt-section { page-break-inside: avoid; }
 }
 
 /* Input reset */

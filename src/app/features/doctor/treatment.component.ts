@@ -32,10 +32,8 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                 <h1 class="font-display text-3xl font-bold">{{ apt.userName }}</h1>
                 <div class="flex items-center gap-4 text-sm text-emerald-100 mt-1">
                   @if (patient(); as p) {
-                    <span>{{ p.mobile }}</span>
-                    <span>•</span>
-                    <span>Age {{ p.age }}</span>
-                    <span>•</span>
+                    <span>{{ p.mobile }}</span><span>•</span>
+                    <span>Age {{ p.age }}</span><span>•</span>
                   }
                   <span>{{ pastVisits().length }} past visit{{ pastVisits().length !== 1 ? 's' : '' }}</span>
                 </div>
@@ -50,7 +48,6 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
         </div>
 
         <div class="grid grid-cols-3 gap-6">
-          <!-- Main Treatment Area -->
           <div class="col-span-2 space-y-6">
 
             <!-- Symptoms -->
@@ -61,11 +58,8 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                   <p class="text-xs text-slate-500">{{ selectedSymptoms().length }} selected</p>
                 </div>
               </div>
-              <input
-                type="text"
-                placeholder="Search symptoms..."
-                [(ngModel)]="symptomSearch"
-                class="w-full px-4 py-2.5 mb-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all text-sm" />
+              <input type="text" placeholder="Search symptoms..." [(ngModel)]="symptomSearch"
+                     class="w-full px-4 py-2.5 mb-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all text-sm" />
               <div class="flex flex-wrap gap-2">
                 @for (symptom of filteredSymptoms(); track symptom) {
                   <button (click)="toggleSymptom(symptom)"
@@ -90,11 +84,8 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                   <p class="text-xs text-slate-500">{{ selectedDiagnosis().length }} selected</p>
                 </div>
               </div>
-              <input
-                type="text"
-                placeholder="Search diagnoses..."
-                [(ngModel)]="diagnosisSearch"
-                class="w-full px-4 py-2.5 mb-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all text-sm" />
+              <input type="text" placeholder="Search diagnoses..." [(ngModel)]="diagnosisSearch"
+                     class="w-full px-4 py-2.5 mb-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all text-sm" />
               <div class="flex flex-wrap gap-2">
                 @for (d of filteredDiagnoses(); track d) {
                   <button (click)="toggleDiagnosis(d)"
@@ -120,7 +111,6 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                 </div>
               </div>
 
-              <!-- Category tabs -->
               <div class="flex gap-2 mb-4 flex-wrap">
                 @for (cat of MEDICAL_TESTS; track cat.category) {
                   <button (click)="activeTestCategory.set(cat.category)"
@@ -133,11 +123,8 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                 }
               </div>
 
-              <input
-                type="text"
-                placeholder="Search tests in {{ activeTestCategory() }}..."
-                [(ngModel)]="testSearch"
-                class="w-full px-4 py-2.5 mb-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 transition-all text-sm" />
+              <input type="text" placeholder="Search tests in {{ activeTestCategory() }}..." [(ngModel)]="testSearch"
+                     class="w-full px-4 py-2.5 mb-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 transition-all text-sm" />
 
               <div class="flex flex-wrap gap-2">
                 @for (t of filteredTests(); track t) {
@@ -183,12 +170,10 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                 </div>
               </div>
 
-              <!-- Builder Row -->
               <div class="grid grid-cols-12 gap-3 mb-4">
                 <div class="col-span-5">
                   <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Medicine</label>
-                  <select [(ngModel)]="selectedMedicineName"
-                          (ngModelChange)="onMedicineChange()"
+                  <select [(ngModel)]="selectedMedicineName" (ngModelChange)="onMedicineChange()"
                           class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 text-sm">
                     <option value="">Select medicine...</option>
                     @for (m of MEDICINES; track m.name) {
@@ -198,8 +183,7 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                 </div>
                 <div class="col-span-5">
                   <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Dose</label>
-                  <select [(ngModel)]="selectedDose"
-                          [disabled]="!selectedMedicineName"
+                  <select [(ngModel)]="selectedDose" [disabled]="!selectedMedicineName"
                           class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                     <option value="">{{ selectedMedicineName ? 'Select dose...' : 'Pick medicine first' }}</option>
                     @for (d of availableDoses(); track d) {
@@ -209,8 +193,7 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                   </select>
                 </div>
                 <div class="col-span-2 flex items-end">
-                  <button (click)="addToPrescription()"
-                          [disabled]="!canAdd()"
+                  <button (click)="addToPrescription()" [disabled]="!canAdd()"
                           class="w-full px-3 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold text-sm shadow-md shadow-teal-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
                     Add
                   </button>
@@ -219,15 +202,11 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
 
               @if (selectedDose === '__custom__') {
                 <div class="mb-4">
-                  <input
-                    type="text"
-                    placeholder="Enter custom dose instructions..."
-                    [(ngModel)]="customDose"
-                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 text-sm" />
+                  <input type="text" placeholder="Enter custom dose instructions..." [(ngModel)]="customDose"
+                         class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-100 text-sm" />
                 </div>
               }
 
-              <!-- Prescription List -->
               @if (prescription().length === 0) {
                 <div class="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-8 text-center text-sm text-slate-400">
                   No medications added yet — select medicine + dose above and click Add
@@ -236,15 +215,12 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
                 <div class="space-y-2">
                   @for (item of prescription(); track item.name + '|' + item.dosage; let i = $index) {
                     <div class="flex items-center gap-3 p-3 bg-teal-50 border border-teal-100 rounded-xl">
-                      <div class="w-8 h-8 bg-teal-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
-                        {{ i + 1 }}
-                      </div>
+                      <div class="w-8 h-8 bg-teal-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">{{ i + 1 }}</div>
                       <div class="flex-1">
                         <p class="font-semibold text-slate-900 text-sm">{{ item.name }}</p>
                         <p class="text-xs text-slate-600">{{ item.dosage }}</p>
                       </div>
-                      <button (click)="removeFromPrescription(i)"
-                              class="text-slate-400 hover:text-rose-500 p-1">
+                      <button (click)="removeFromPrescription(i)" class="text-slate-400 hover:text-rose-500 p-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -258,34 +234,26 @@ import { Medication, MedicalTest, Treatment } from '../../core/models/treatment.
               }
             </div>
 
-            <!-- Patient Remarks (printed on patient copy) -->
+            <!-- Remarks -->
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
               <h3 class="font-display text-lg font-semibold text-slate-900 mb-1">Remarks for Patient</h3>
               <p class="text-xs text-slate-500 mb-3">Shown on the patient's prescription copy</p>
-              <textarea
-                [(ngModel)]="remarks"
-                rows="3"
-                placeholder="Follow-up advice, lifestyle recommendations, when to return..."
-                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all text-sm resize-none"></textarea>
+              <textarea [(ngModel)]="remarks" rows="3"
+                        placeholder="Follow-up advice, lifestyle recommendations, when to return..."
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all text-sm resize-none"></textarea>
             </div>
 
             <!-- Internal Notes -->
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
               <h3 class="font-display text-lg font-semibold text-slate-900 mb-1">Doctor's Internal Notes</h3>
               <p class="text-xs text-slate-500 mb-3">Only shown on the internal copy</p>
-              <textarea
-                [(ngModel)]="notes"
-                rows="3"
-                placeholder="Clinical observations, differential considerations, internal references..."
-                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all text-sm resize-none"></textarea>
+              <textarea [(ngModel)]="notes" rows="3"
+                        placeholder="Clinical observations, differential considerations, internal references..."
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all text-sm resize-none"></textarea>
             </div>
 
-            <!-- Submit -->
             <button (click)="complete()"
                     class="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-2xl shadow-emerald-500/40 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
               Complete & Generate Prescription
             </button>
           </div>
@@ -394,24 +362,6 @@ export class TreatmentComponent {
     return q ? all.filter(t => t.toLowerCase().includes(q)) : all;
   });
 
-  isTestSelected(category: string, name: string): boolean {
-    return this.selectedTests().some(t => t.category === category && t.name === name);
-  }
-
-  toggleTest(category: string, name: string): void {
-    this.selectedTests.update(arr =>
-      this.isTestSelected(category, name)
-        ? arr.filter(t => !(t.category === category && t.name === name))
-        : [...arr, { category, name }]
-    );
-  }
-
-  removeTest(test: MedicalTest): void {
-    this.selectedTests.update(arr =>
-      arr.filter(t => !(t.category === test.category && t.name === test.name))
-    );
-  }
-
   availableDoses(): string[] {
     const m = MEDICINES.find(x => x.name === this.selectedMedicineName);
     return m ? m.doses : [];
@@ -445,6 +395,24 @@ export class TreatmentComponent {
 
   removeFromPrescription(index: number): void {
     this.prescription.update(arr => arr.filter((_, i) => i !== index));
+  }
+
+  isTestSelected(category: string, name: string): boolean {
+    return this.selectedTests().some(t => t.category === category && t.name === name);
+  }
+
+  toggleTest(category: string, name: string): void {
+    this.selectedTests.update(arr =>
+      this.isTestSelected(category, name)
+        ? arr.filter(t => !(t.category === category && t.name === name))
+        : [...arr, { category, name }]
+    );
+  }
+
+  removeTest(test: MedicalTest): void {
+    this.selectedTests.update(arr =>
+      arr.filter(t => !(t.category === test.category && t.name === test.name))
+    );
   }
 
   toggleSymptom(symptom: string): void {
@@ -490,7 +458,7 @@ export class TreatmentComponent {
 
     this.appointmentService.completeAppointment(apt.id, treatment);
     this.notificationService.success('Treatment recorded successfully');
-    this.router.navigate(['/doctor/prescription', apt.id]);
+    this.router.navigate(['/doctor/dashboard']);
   }
 
   back(): void {

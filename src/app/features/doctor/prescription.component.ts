@@ -1,24 +1,23 @@
 import { Component, inject, computed, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { CommonModule, Location } from '@angular/common';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { UserService } from '../../core/services/user.service';
+import { ClinicService } from '../../core/services/clinic.service';
 
 @Component({
   selector: 'app-prescription',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="animate-fade-in-up">
-      <!-- Toolbar (hidden in print) -->
       <div class="no-print mb-6 flex items-center justify-between">
         <button (click)="back()" class="text-sm text-slate-600 hover:text-emerald-600 flex items-center gap-1 font-medium transition-colors">
-          ← Back to Queue
+          ← Back
         </button>
-        <a routerLink="/doctor/queue"
-           class="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
+        <button (click)="back()"
+                class="px-5 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
           Done
-        </a>
+        </button>
       </div>
 
       @if (appointment(); as apt) {
@@ -30,34 +29,29 @@ import { UserService } from '../../core/services/user.service';
               <div class="no-print flex items-center justify-between mb-3">
                 <div>
                   <h3 class="font-display text-lg font-semibold text-slate-900">Patient Copy</h3>
-                  <p class="text-xs text-slate-500">Prescription + remarks only</p>
+                  <p class="text-xs text-slate-500">Rx + tests + remarks</p>
                 </div>
                 <button (click)="printPatient()"
-                        class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-semibold shadow-md shadow-emerald-500/30 hover:shadow-lg transition-all text-sm flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
+                        class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-semibold shadow-md shadow-emerald-500/30 hover:shadow-lg transition-all text-sm">
                   Print
                 </button>
               </div>
 
               <div class="print-area print-patient bg-white shadow-2xl rounded-2xl overflow-hidden border border-slate-200">
                 <div class="p-6 font-mono text-xs leading-relaxed text-slate-900">
-                  <!-- Header -->
                   <div class="text-center pb-4 border-b-2 border-dashed border-slate-300">
-                    <div class="text-2xl mb-1">★ MediCare<span class="font-bold">+</span> ★</div>
-                    <div class="text-[10px] uppercase tracking-widest text-slate-600">Intelligent Clinic</div>
-                    <div class="text-[10px] text-slate-500 mt-1">123 Healthcare Avenue</div>
-                    <div class="text-[10px] text-slate-500">Tel: +92-21-1234-5678</div>
+                    <div class="text-base font-bold uppercase tracking-wider">{{ clinic()?.name ?? 'MediCare+' }}</div>
+                    @if (clinic()?.address) {
+                      <div class="text-[10px] text-slate-500 mt-1">{{ clinic()!.address }}</div>
+                    }
+                    @if (clinic()?.phone) {
+                      <div class="text-[10px] text-slate-500">Tel: {{ clinic()!.phone }}</div>
+                    }
                   </div>
-
-                  <!-- Rx Number -->
                   <div class="text-center py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500">PRESCRIPTION</div>
                     <div class="text-base font-bold tracking-wider">RX-{{ formatRxNumber(apt.id) }}</div>
                   </div>
-
-                  <!-- Date/Time -->
                   <div class="flex justify-between py-3 border-b border-dashed border-slate-300 text-[11px]">
                     <div>
                       <div class="text-slate-500">DATE</div>
@@ -68,8 +62,6 @@ import { UserService } from '../../core/services/user.service';
                       <div class="font-semibold">{{ formatTime() }}</div>
                     </div>
                   </div>
-
-                  <!-- Patient -->
                   <div class="py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500 mb-1">PATIENT</div>
                     <div class="font-bold text-sm">{{ apt.userName }}</div>
@@ -77,8 +69,6 @@ import { UserService } from '../../core/services/user.service';
                       <div class="text-[10px] text-slate-600 mt-1">Age {{ p.age }} • {{ p.mobile }}</div>
                     }
                   </div>
-
-                  <!-- Medications (Rx) -->
                   <div class="py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500 mb-2">℞  MEDICATIONS</div>
                     <div class="space-y-3">
@@ -90,8 +80,6 @@ import { UserService } from '../../core/services/user.service';
                       }
                     </div>
                   </div>
-
-                  <!-- Tests Advised -->
                   @if (treatment.tests && treatment.tests.length > 0) {
                     <div class="py-3 border-b border-dashed border-slate-300">
                       <div class="text-[10px] text-slate-500 mb-2">TESTS ADVISED</div>
@@ -103,8 +91,6 @@ import { UserService } from '../../core/services/user.service';
                       }
                     </div>
                   }
-
-                  <!-- Remarks -->
                   @if (treatment.remarks) {
                     <div class="py-3 border-b border-dashed border-slate-300">
                       <div class="text-[10px] text-slate-500 mb-1">REMARKS</div>
@@ -112,14 +98,23 @@ import { UserService } from '../../core/services/user.service';
                     </div>
                   }
 
-                  <!-- Doctor -->
+                  <!-- Consultation Fee -->
+                  @if (clinic(); as c) {
+                    <div class="py-3 border-b border-dashed border-slate-300">
+                      <div class="flex items-center justify-between">
+                        <div class="text-[10px] text-slate-500">CONSULTATION FEE</div>
+                        <div class="font-bold text-base">{{ c.currency }} {{ c.patientConsultationFee }}</div>
+                      </div>
+                      <div class="text-[10px] text-slate-500 mt-1 text-right">PAID</div>
+                    </div>
+                  }
+
                   <div class="pt-4 text-center">
                     <div class="text-[10px] text-slate-500 mb-1">Prescribed by</div>
                     <div class="font-bold">Dr. Sarah Mitchell</div>
                     <div class="text-[10px] text-slate-600">General Physician</div>
                     <div class="text-[10px] text-slate-500 mt-1">License: MED-2024-8847</div>
                   </div>
-
                   <div class="pt-4 mt-3 border-t-2 border-dashed border-slate-300 text-center">
                     <div class="text-[11px] font-semibold">★ Get Well Soon ★</div>
                   </div>
@@ -135,10 +130,7 @@ import { UserService } from '../../core/services/user.service';
                   <p class="text-xs text-slate-500">Full record — symptoms, diagnosis, notes</p>
                 </div>
                 <button (click)="printInternal()"
-                        class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold shadow-md shadow-indigo-500/30 hover:shadow-lg transition-all text-sm flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
+                        class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg font-semibold shadow-md shadow-indigo-500/30 hover:shadow-lg transition-all text-sm">
                   Print
                 </button>
               </div>
@@ -146,16 +138,16 @@ import { UserService } from '../../core/services/user.service';
               <div class="print-area print-internal bg-white shadow-2xl rounded-2xl overflow-hidden border border-slate-200">
                 <div class="p-6 font-mono text-xs leading-relaxed text-slate-900">
                   <div class="text-center pb-4 border-b-2 border-dashed border-slate-300">
-                    <div class="text-2xl mb-1">★ MediCare<span class="font-bold">+</span> ★</div>
-                    <div class="text-[10px] uppercase tracking-widest text-slate-600">Internal Record</div>
-                    <div class="text-[10px] text-slate-500 mt-1">123 Healthcare Avenue</div>
+                    <div class="text-base font-bold uppercase tracking-wider">{{ clinic()?.name ?? 'MediCare+' }}</div>
+                    <div class="text-[10px] uppercase tracking-widest text-slate-600 mt-1">Internal Record</div>
+                    @if (clinic()?.address) {
+                      <div class="text-[10px] text-slate-500 mt-1">{{ clinic()!.address }}</div>
+                    }
                   </div>
-
                   <div class="text-center py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500">PRESCRIPTION</div>
                     <div class="text-base font-bold tracking-wider">RX-{{ formatRxNumber(apt.id) }}</div>
                   </div>
-
                   <div class="flex justify-between py-3 border-b border-dashed border-slate-300 text-[11px]">
                     <div>
                       <div class="text-slate-500">DATE</div>
@@ -166,7 +158,6 @@ import { UserService } from '../../core/services/user.service';
                       <div class="font-semibold">{{ formatTime() }}</div>
                     </div>
                   </div>
-
                   <div class="flex justify-between py-3 border-b border-dashed border-slate-300 text-[11px]">
                     <div>
                       <div class="text-slate-500">SHIFT</div>
@@ -177,31 +168,25 @@ import { UserService } from '../../core/services/user.service';
                       <div class="font-bold text-base">#{{ apt.sequence }}</div>
                     </div>
                   </div>
-
                   <div class="py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500 mb-1">PATIENT</div>
                     <div class="font-bold text-sm">{{ apt.userName }}</div>
                     @if (patient(); as p) {
-                      <div class="text-[10px] text-slate-600 mt-1">
-                        ID #{{ padId(p.id) }} • Age {{ p.age }} • {{ p.mobile }}
-                      </div>
+                      <div class="text-[10px] text-slate-600 mt-1">ID #{{ padId(p.id) }} • Age {{ p.age }} • {{ p.mobile }}</div>
                     }
                   </div>
-
                   <div class="py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500 mb-2">SYMPTOMS</div>
                     @for (s of treatment.symptoms; track s) {
                       <div class="text-[11px]">• {{ s }}</div>
                     }
                   </div>
-
                   <div class="py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500 mb-2">DIAGNOSIS</div>
                     @for (d of treatment.diagnosis; track d) {
                       <div class="text-[11px] font-semibold">▸ {{ d }}</div>
                     }
                   </div>
-
                   <div class="py-3 border-b border-dashed border-slate-300">
                     <div class="text-[10px] text-slate-500 mb-2">℞  MEDICATIONS</div>
                     <div class="space-y-3">
@@ -213,7 +198,6 @@ import { UserService } from '../../core/services/user.service';
                       }
                     </div>
                   </div>
-
                   @if (treatment.tests && treatment.tests.length > 0) {
                     <div class="py-3 border-b border-dashed border-slate-300">
                       <div class="text-[10px] text-slate-500 mb-2">TESTS ADVISED</div>
@@ -225,18 +209,29 @@ import { UserService } from '../../core/services/user.service';
                       }
                     </div>
                   }
-
                   @if (treatment.remarks) {
                     <div class="py-3 border-b border-dashed border-slate-300">
                       <div class="text-[10px] text-slate-500 mb-1">PATIENT REMARKS</div>
                       <div class="text-[11px] italic">{{ treatment.remarks }}</div>
                     </div>
                   }
-
                   @if (treatment.notes) {
                     <div class="py-3 border-b border-dashed border-slate-300">
                       <div class="text-[10px] text-slate-500 mb-1">INTERNAL NOTES</div>
                       <div class="text-[11px] italic">{{ treatment.notes }}</div>
+                    </div>
+                  }
+
+                  @if (clinic(); as c) {
+                    <div class="py-3 border-b border-dashed border-slate-300">
+                      <div class="flex items-center justify-between">
+                        <div class="text-[10px] text-slate-500">CONSULTATION FEE</div>
+                        <div class="font-bold text-base">{{ c.currency }} {{ c.patientConsultationFee }}</div>
+                      </div>
+                      <div class="flex items-center justify-between mt-1 text-[10px] text-slate-500">
+                        <span>Platform service fee</span>
+                        <span>{{ c.currency }} {{ c.perAppointmentFee }}</span>
+                      </div>
                     </div>
                   }
 
@@ -246,7 +241,6 @@ import { UserService } from '../../core/services/user.service';
                     <div class="text-[10px] text-slate-600">General Physician</div>
                     <div class="text-[10px] text-slate-500 mt-1">License: MED-2024-8847</div>
                   </div>
-
                   <div class="pt-4 mt-3 border-t-2 border-dashed border-slate-300 text-center">
                     <div class="text-[9px] text-slate-400">Computer-generated internal copy</div>
                   </div>
@@ -272,7 +266,13 @@ export class PrescriptionComponent {
 
   private appointmentService = inject(AppointmentService);
   private userService = inject(UserService);
-  private router = inject(Router);
+  private clinicService = inject(ClinicService);
+  private location = inject(Location);
+
+  clinic = computed(() => {
+    const apt = this.appointment();
+    return apt ? this.clinicService.getById(apt.clinicId) : null;
+  });
 
   appointment = computed(() => {
     const aptId = parseInt(this.id || '0', 10);
@@ -299,7 +299,7 @@ export class PrescriptionComponent {
   printInternal(): void { this.printWithMode('internal'); }
 
   back(): void {
-    this.router.navigate(['/doctor/queue']);
+    this.location.back();
   }
 
   formatDate(date: string): string {

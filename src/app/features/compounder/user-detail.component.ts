@@ -1,12 +1,13 @@
 import { Component, inject, computed, Input } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { UserService } from '../../core/services/user.service';
 import { AppointmentService } from '../../core/services/appointment.service';
 
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="animate-fade-in-up">
       <button (click)="location.back()"
@@ -92,6 +93,15 @@ import { AppointmentService } from '../../core/services/appointment.service';
                     </div>
                     <p class="text-sm text-slate-500">{{ apt.shiftName }} • Sequence #{{ apt.sequence }}</p>
                   </div>
+                  @if (apt.status === 'completed' && apt.treatment) {
+                    <a [routerLink]="reprintLink(apt.id)"
+                       class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors inline-flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                      </svg>
+                      Reprint
+                    </a>
+                  }
                 </div>
                 @if (apt.treatment) {
                   <div class="mt-4 grid grid-cols-3 gap-4 bg-slate-50 rounded-2xl p-4">
@@ -178,6 +188,11 @@ export class UserDetailComponent {
 
   getInitials(name: string): string {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  reprintLink(appointmentId: number): string[] {
+    const role = window.location.pathname.startsWith('/doctor') ? 'doctor' : 'compounder';
+    return ['/', role, 'prescription', String(appointmentId)];
   }
 
   padId(id: number): string {
